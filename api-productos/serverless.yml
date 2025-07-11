@@ -1,0 +1,105 @@
+org: sebastianchu
+service: api-productos
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  timeout: 30
+  region: us-east-1
+  iam:
+    role: arn:aws:iam::971808350791:role/LabRole
+  environment:
+    TABLE_NAME: ProductosTable-dev
+    JWT_SECRET: ${env:JWT_SECRET}
+
+package:
+  include:
+    - node_modules/**
+    - handler.js
+
+functions:
+  crearProducto:
+    handler: handler.crearProducto
+    events:
+      - http:
+          path: /productos
+          method: post
+          cors: true
+
+  listarProductos:
+    handler: handler.listarProductos
+    events:
+      - http:
+          path: /productos
+          method: get
+          cors: true
+
+  buscarProducto:
+    handler: handler.buscarProducto
+    events:
+      - http:
+          path: /productos/{codigo}
+          method: get
+          cors: true
+
+  modificarProducto:
+    handler: handler.modificarProducto
+    events:
+      - http:
+          path: /productos/{codigo}
+          method: put
+          cors: true
+
+  eliminarProducto:
+    handler: handler.eliminarProducto
+    events:
+      - http:
+          path: /productos/{codigo}
+          method: delete
+          cors: true
+
+  procesarCambiosDynamo:
+    handler: handler.procesarCambiosDynamo
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - ProductosTable
+              - StreamArn
+          batchSize: 5
+          startingPosition: LATEST
+        
+  actualizarProductos:
+    handler: handler.actualizarProductos
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - ProductosTable
+              - StreamArn
+          batchSize: 5
+          startingPosition: LATEST
+
+resources:
+  Resources:
+    ProductosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ProductosTable-dev
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: codigo
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: codigo
+            KeyType: RANGE
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+
+
