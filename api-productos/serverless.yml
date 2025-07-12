@@ -16,6 +16,7 @@ package:
   include:
     - node_modules/**
     - handler.js
+    - utils.js/**
 
 functions:
   crearProducto:
