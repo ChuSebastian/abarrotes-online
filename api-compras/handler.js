@@ -4,6 +4,7 @@ const { validarToken } = require("./utils/auth");
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const TABLA_COMPRAS = process.env.TABLE_NAME;
+const TABLA_PRODUCTOS = process.env.PRODUCTOS_TABLE_NAME;
 
 const buildResponse = (statusCode, body) => ({
   statusCode,
@@ -14,18 +15,15 @@ module.exports.comprar = async (event) => {
   try {
     const tenant_id = validarToken(event);
     const datos = JSON.parse(event.body);
-    const tablaProductos = `ProductosTable-${tenant_id}`;
 
     let total = 0;
 
-    // Verificar y descontar stock
     for (const producto of datos.productos) {
       const { producto_id, cantidad } = producto;
 
-      // Obtener stock actual
       const resultado = await dynamo
         .get({
-          TableName: tablaProductos,
+          TableName: TABLA_PRODUCTOS,
           Key: { tenant_id, producto_id },
         })
         .promise();
@@ -41,10 +39,9 @@ module.exports.comprar = async (event) => {
         });
       }
 
-      // Descontar stock
       await dynamo
         .update({
-          TableName: tablaProductos,
+          TableName: TABLA_PRODUCTOS,
           Key: { tenant_id, producto_id },
           UpdateExpression: "SET stock = stock - :cant",
           ConditionExpression: "stock >= :cant",
@@ -55,12 +52,9 @@ module.exports.comprar = async (event) => {
         .promise();
 
       total += item.precio_unitario * cantidad;
-
-      // Agregar precio a cada producto del array de respuesta
       producto.precio_unitario = item.precio_unitario;
     }
 
-    // Guardar la compra
     const compra = {
       id: uuidv4(),
       tenant_id,
