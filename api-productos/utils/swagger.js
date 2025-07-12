@@ -1,6 +1,3 @@
-// utils/swagger.js
-const express = require("express");
-const serverless = require("serverless-http");
 const swaggerUi = require("swagger-ui-express");
 
 const swaggerSpec = {
@@ -10,12 +7,6 @@ const swaggerSpec = {
     version: "1.0.0",
     description: "Documentación de la API de productos",
   },
-  servers: [
-    {
-      url: "https://wx8ctj21p4.execute-api.us-east-1.amazonaws.com/dev",
-      description: "API Gateway - Entorno dev",
-    },
-  ],
   components: {
     securitySchemes: {
       bearerAuth: {
@@ -24,63 +15,54 @@ const swaggerSpec = {
         bearerFormat: "JWT",
       },
     },
-    schemas: {
-      Producto: {
-        type: "object",
-        required: ["codigo", "nombre", "precio", "stock"],
-        properties: {
-          codigo: { type: "string", example: "prod-001" },
-          nombre: { type: "string", example: "Camiseta Blanca" },
-          precio: { type: "number", example: 29.99 },
-          stock: { type: "integer", example: 100 },
-        },
-      },
-    },
   },
-  security: [{ bearerAuth: [] }],
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
   paths: {
     "/productos": {
       get: {
-        summary: "Listar productos",
-        responses: {
-          200: {
-            description: "Lista de productos",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "array",
-                  items: { $ref: "#/components/schemas/Producto" },
-                },
-              },
-            },
-          },
-        },
+        summary: "Listar todos los productos",
         security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Lista de productos" },
+          500: { description: "Error interno" },
+        },
       },
       post: {
-        summary: "Crear producto",
+        summary: "Crear un nuevo producto",
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/Producto" },
+              schema: {
+                type: "object",
+                properties: {
+                  codigo: { type: "string" },
+                  nombre: { type: "string" },
+                  descripcion: { type: "string" },
+                  precio_unitario: { type: "number" },
+                  stock: { type: "integer" },
+                },
+                required: ["codigo", "nombre", "precio_unitario", "stock"],
+              },
             },
           },
         },
         responses: {
-          201: {
-            description: "Producto creado",
-          },
-          400: {
-            description: "Error en la solicitud",
-          },
+          201: { description: "Producto creado" },
+          400: { description: "Error de validación" },
+          500: { description: "Error interno" },
         },
-        security: [{ bearerAuth: [] }],
       },
     },
     "/productos/{codigo}": {
       get: {
         summary: "Buscar producto por código",
+        security: [{ bearerAuth: [] }],
         parameters: [
           {
             name: "codigo",
@@ -90,22 +72,13 @@ const swaggerSpec = {
           },
         ],
         responses: {
-          200: {
-            description: "Producto encontrado",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/Producto" },
-              },
-            },
-          },
-          404: {
-            description: "Producto no encontrado",
-          },
+          200: { description: "Producto encontrado" },
+          404: { description: "Producto no encontrado" },
         },
-        security: [{ bearerAuth: [] }],
       },
       put: {
-        summary: "Modificar producto",
+        summary: "Modificar un producto",
+        security: [{ bearerAuth: [] }],
         parameters: [
           {
             name: "codigo",
@@ -115,21 +88,28 @@ const swaggerSpec = {
           },
         ],
         requestBody: {
-          required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/Producto" },
+              schema: {
+                type: "object",
+                properties: {
+                  nombre: { type: "string" },
+                  descripcion: { type: "string" },
+                  precio_unitario: { type: "number" },
+                  stock: { type: "integer" },
+                },
+              },
             },
           },
         },
         responses: {
-          200: { description: "Producto modificado" },
-          400: { description: "Error en la solicitud" },
+          200: { description: "Producto actualizado" },
+          404: { description: "Producto no encontrado" },
         },
-        security: [{ bearerAuth: [] }],
       },
       delete: {
-        summary: "Eliminar producto",
+        summary: "Eliminar un producto",
+        security: [{ bearerAuth: [] }],
         parameters: [
           {
             name: "codigo",
@@ -139,22 +119,13 @@ const swaggerSpec = {
           },
         ],
         responses: {
-          204: { description: "Producto eliminado" },
+          200: { description: "Producto eliminado" },
           404: { description: "Producto no encontrado" },
         },
-        security: [{ bearerAuth: [] }],
       },
     },
   },
 };
 
-// Crear app Express y exponer /docs
-const app = express();
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-const handler = serverless(app);
-
-module.exports = {
-  handler, // este es el handler que se usará en serverless.yml
-};
+module.exports = { swaggerUi, swaggerSpec };
 

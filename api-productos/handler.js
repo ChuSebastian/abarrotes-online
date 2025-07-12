@@ -182,10 +182,20 @@ module.exports.actualizarProductos = async (event) => {
 };
 
 
+
+
 module.exports.swaggerDocs = async (event, context) => {
   const app = express();
+
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+  });
+
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
   const handler = serverless(app);
-  return await handler(event, context);
+  return handler(event, context);
 };
 

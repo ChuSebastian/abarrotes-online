@@ -18,7 +18,6 @@ package:
     - node_modules/**
     - handler.js
     - utils.js/**
-    - utils/swagger.js
 
 functions:
   crearProducto:
@@ -86,10 +85,10 @@ functions:
           startingPosition: LATEST
 
   swaggerDocs:
-    handler: utils/swagger.handler 
+    handler: handler.swaggerDocs
     events:
       - http:
-          path: docs
+          path: docs/{proxy+}
           method: get
           cors: true
 
