@@ -86,7 +86,7 @@ functions:
           startingPosition: LATEST
 
   swaggerDocs:
-    handler: handler.swaggerDocs
+    handler: utils/swagger.handler 
     events:
       - http:
           path: docs

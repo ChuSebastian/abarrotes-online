@@ -1,3 +1,6 @@
+// utils/swagger.js
+const express = require("express");
+const serverless = require("serverless-http");
 const swaggerUi = require("swagger-ui-express");
 
 const swaggerSpec = {
@@ -7,6 +10,12 @@ const swaggerSpec = {
     version: "1.0.0",
     description: "Documentación de la API de productos",
   },
+  servers: [
+    {
+      url: "https://wx8ctj21p4.execute-api.us-east-1.amazonaws.com/dev",
+      description: "API Gateway - Entorno dev",
+    },
+  ],
   components: {
     securitySchemes: {
       bearerAuth: {
@@ -36,6 +45,14 @@ const swaggerSpec = {
         responses: {
           200: {
             description: "Lista de productos",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Producto" },
+                },
+              },
+            },
           },
         },
         security: [{ bearerAuth: [] }],
@@ -75,9 +92,14 @@ const swaggerSpec = {
         responses: {
           200: {
             description: "Producto encontrado",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Producto" },
+              },
+            },
           },
           404: {
-            description: "No encontrado",
+            description: "Producto no encontrado",
           },
         },
         security: [{ bearerAuth: [] }],
@@ -101,7 +123,8 @@ const swaggerSpec = {
           },
         },
         responses: {
-          200: { description: "Modificado" },
+          200: { description: "Producto modificado" },
+          400: { description: "Error en la solicitud" },
         },
         security: [{ bearerAuth: [] }],
       },
@@ -116,7 +139,8 @@ const swaggerSpec = {
           },
         ],
         responses: {
-          204: { description: "Eliminado" },
+          204: { description: "Producto eliminado" },
+          404: { description: "Producto no encontrado" },
         },
         security: [{ bearerAuth: [] }],
       },
@@ -124,8 +148,13 @@ const swaggerSpec = {
   },
 };
 
+// Crear app Express y exponer /docs
+const app = express();
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+const handler = serverless(app);
+
 module.exports = {
-  swaggerUi,
-  swaggerSpec,
+  handler, // este es el handler que se usará en serverless.yml
 };
 
