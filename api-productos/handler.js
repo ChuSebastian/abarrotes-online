@@ -1,6 +1,10 @@
 const AWS = require("aws-sdk");
 const axios = require("axios");
 const { validarToken } = require("./utils/auth");
+const express = require("express");
+const serverless = require("serverless-http");
+const { swaggerUi, swaggerSpec } = require("./utils/swagger");
+
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.TABLE_NAME;
@@ -175,5 +179,13 @@ module.exports.actualizarProductos = async (event) => {
   }
 
   return { statusCode: 200 };
+};
+
+
+module.exports.swaggerDocs = async (event, context) => {
+  const app = express();
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  const handler = serverless(app);
+  return await handler(event, context);
 };
 

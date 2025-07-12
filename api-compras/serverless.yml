@@ -18,7 +18,7 @@ package:
   include:
     - node_modules/**
     - handler.js
-    - utils.js/**
+    - utils/**
 
 functions:
   comprar:
@@ -34,6 +34,14 @@ functions:
     events:
       - http:
           path: /compras
+          method: get
+          cors: true
+
+  swaggerDocs:
+    handler: handler.swaggerDocs
+    events:
+      - http:
+          path: docs
           method: get
           cors: true
 

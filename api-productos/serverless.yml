@@ -4,8 +4,8 @@ service: api-productos
 provider:
   name: aws
   runtime: nodejs20.x
-  timeout: 30
   region: us-east-1
+  timeout: 30
   stage: ${opt:stage, 'dev'}
   iam:
     role: arn:aws:iam::971808350791:role/LabRole
@@ -18,6 +18,7 @@ package:
     - node_modules/**
     - handler.js
     - utils.js/**
+    - utils/swagger.js
 
 functions:
   crearProducto:
@@ -71,7 +72,7 @@ functions:
               - StreamArn
           batchSize: 5
           startingPosition: LATEST
-        
+
   actualizarProductos:
     handler: handler.actualizarProductos
     events:
@@ -83,6 +84,14 @@ functions:
               - StreamArn
           batchSize: 5
           startingPosition: LATEST
+
+  swaggerDocs:
+    handler: handler.swaggerDocs
+    events:
+      - http:
+          path: docs
+          method: get
+          cors: true
 
 resources:
   Resources:
