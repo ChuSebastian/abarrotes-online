@@ -4,13 +4,13 @@ service: api-productos
 provider:
   name: aws
   runtime: nodejs20.x
-  region: us-east-1
   timeout: 30
-  stage: ${opt:stage, 'dev'} 
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
   iam:
     role: arn:aws:iam::971808350791:role/LabRole
   environment:
-    TABLE_NAME: ProductosTable-${opt:stage, 'dev'}
+    TABLE_NAME: ProductosTable-${self:provider.stage}
     JWT_SECRET: ${env:JWT_SECRET}
 
 package:
@@ -71,7 +71,7 @@ functions:
               - StreamArn
           batchSize: 5
           startingPosition: LATEST
-
+        
   actualizarProductos:
     handler: handler.actualizarProductos
     events:
@@ -89,7 +89,7 @@ resources:
     ProductosTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ProductosTable-${opt:stage, 'dev'}
+        TableName: ProductosTable-${self:provider.stage}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: tenant_id
