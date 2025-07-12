@@ -25,11 +25,7 @@ const swaggerSpec = {
     "/compras": {
       get: {
         summary: "Obtener compras por tenant",
-        security: [
-          {
-            bearerAuth: [],
-          },
-        ],
+        security: [{ bearerAuth: [] }],
         responses: {
           200: {
             description: "Lista de compras",
@@ -41,11 +37,7 @@ const swaggerSpec = {
       },
       post: {
         summary: "Registrar una compra",
-        security: [
-          {
-            bearerAuth: [],
-          },
-        ],
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
