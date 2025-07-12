@@ -4,7 +4,7 @@ const { validarToken } = require("./utils/auth");
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
-const TABLA_COMPRAS = process.env.TABLA_COMPRAS;
+const TABLA_COMPRAS = process.env.TABLE_NAME;
 
 const buildResponse = (statusCode, body) => ({
   statusCode,
