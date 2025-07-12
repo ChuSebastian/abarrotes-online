@@ -5,8 +5,8 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: us-east-1
-  timeout: 30
   stage: ${opt:stage, 'dev'}
+  timeout: 30
   iam:
     role: arn:aws:iam::971808350791:role/LabRole
   environment:
@@ -25,23 +25,21 @@ functions:
     handler: handler.comprar
     events:
       - http:
-          path: /compras
+          path: compras
           method: post
           cors: true
-
   obtenerCompras:
     handler: handler.obtenerCompras
     events:
       - http:
-          path: /compras
+          path: compras
           method: get
           cors: true
-
   swaggerDocs:
     handler: handler.swaggerDocs
     events:
       - http:
-          path: docs
+          path: docs/{proxy+}
           method: get
           cors: true
 

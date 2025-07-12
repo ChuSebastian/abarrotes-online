@@ -11,12 +11,13 @@ const TABLA_PRODUCTOS = process.env.PRODUCTOS_TABLE_NAME;
 
 const buildResponse = (statusCode, body) => ({
   statusCode,
+  headers: {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Credentials": "true",
+  },
   body: JSON.stringify(body),
 });
 
-/**
- * POST /compras
- */
 module.exports.comprar = async (event) => {
   try {
     const tenant_id = validarToken(event);
@@ -82,9 +83,6 @@ module.exports.comprar = async (event) => {
   }
 };
 
-/**
- * GET /compras
- */
 module.exports.obtenerCompras = async (event) => {
   try {
     const tenant_id = validarToken(event);
@@ -106,10 +104,14 @@ module.exports.obtenerCompras = async (event) => {
   }
 };
 
-/**
- * GET /docs (Swagger UI)
- */
-const app = express();
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-module.exports.swaggerDocs = serverless(app);
-
+module.exports.swaggerDocs = async (event, context) => {
+  const app = express();
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+  });
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  const handler = serverless(app);
+  return handler(event, context);
+};

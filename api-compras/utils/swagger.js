@@ -24,15 +24,11 @@ const swaggerSpec = {
   paths: {
     "/compras": {
       get: {
-        summary: "Obtener compras por tenant",
+        summary: "Obtener historial de compras",
         security: [{ bearerAuth: [] }],
         responses: {
-          200: {
-            description: "Lista de compras",
-          },
-          500: {
-            description: "Error interno del servidor",
-          },
+          "200": { description: "Lista de compras" },
+          "500": { description: "Error interno" },
         },
       },
       post: {
@@ -56,33 +52,23 @@ const swaggerSpec = {
                       required: ["producto_id", "cantidad"],
                     },
                   },
+                  total: { type: "number" },
                 },
-                required: ["productos"],
+                required: ["productos", "total"],
               },
             },
           },
         },
         responses: {
-          201: {
-            description: "Compra creada",
-          },
-          400: {
-            description: "Error de stock",
-          },
-          404: {
-            description: "Producto no encontrado",
-          },
-          500: {
-            description: "Error interno del servidor",
-          },
+          "201": { description: "Compra creada" },
+          "400": { description: "Stock insuficiente" },
+          "404": { description: "Producto no encontrado" },
+          "500": { description: "Error interno" },
         },
       },
     },
   },
 };
 
-module.exports = {
-  swaggerUi,
-  swaggerSpec,
-};
+module.exports = { swaggerUi, swaggerSpec };
 
