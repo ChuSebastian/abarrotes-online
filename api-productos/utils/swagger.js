@@ -1,26 +1,26 @@
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 
-const swaggerSpec = swaggerJsdoc({
+const options = {
   definition: {
     openapi: "3.0.0",
     info: {
       title: "API Productos",
       version: "1.0.0",
-      description: "Documentación de la API de productos multi-tenant",
+      description: "Documentación de la API de Productos",
     },
     components: {
       schemas: {
         Producto: {
           type: "object",
-          required: ["codigo", "nombre", "precio", "stock"],
           properties: {
+            tenant_id: { type: "string" },
+            usuario_id: { type: "string" },
             codigo: { type: "string" },
             nombre: { type: "string" },
             precio: { type: "number" },
-            stock: { type: "number" },
-            tenant_id: { type: "string" },
-            usuario_id: { type: "string" },
+            stock: { type: "integer" },
+            fecha_creacion: { type: "string", format: "date-time" },
           },
         },
       },
@@ -39,48 +39,33 @@ const swaggerSpec = swaggerJsdoc({
           },
           responses: {
             201: { description: "Producto creado" },
-            400: { description: "Error en la solicitud" },
           },
         },
         get: {
-          summary: "Listar productos",
-          parameters: [
-            {
-              name: "limit",
-              in: "query",
-              description: "Número máximo de productos a retornar",
-              schema: { type: "integer" },
-            },
-            {
-              name: "startKey",
-              in: "query",
-              description: "Clave para paginación",
-              schema: { type: "string" },
-            },
-          ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["tenant_id", "usuario_id"],
-                  properties: {
-                    tenant_id: { type: "string" },
-                    usuario_id: { type: "string" },
+          summary: "Listar todos los productos",
+          responses: {
+            200: {
+              description: "Lista de productos",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      Items: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Producto" },
+                      },
+                    },
                   },
                 },
               },
             },
           },
-          responses: {
-            200: { description: "Lista de productos" },
-          },
         },
       },
       "/productos/{codigo}": {
         get: {
-          summary: "Buscar un producto",
+          summary: "Buscar producto por código",
           parameters: [
             {
               name: "codigo",
@@ -89,24 +74,15 @@ const swaggerSpec = swaggerJsdoc({
               schema: { type: "string" },
             },
           ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["tenant_id", "usuario_id"],
-                  properties: {
-                    tenant_id: { type: "string" },
-                    usuario_id: { type: "string" },
-                  },
+          responses: {
+            200: {
+              description: "Producto encontrado",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Producto" },
                 },
               },
             },
-          },
-          responses: {
-            200: { description: "Producto encontrado" },
-            404: { description: "Producto no encontrado" },
           },
         },
         put: {
@@ -123,17 +99,7 @@ const swaggerSpec = swaggerJsdoc({
             required: true,
             content: {
               "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["tenant_id", "usuario_id", "nombre", "precio", "stock"],
-                  properties: {
-                    tenant_id: { type: "string" },
-                    usuario_id: { type: "string" },
-                    nombre: { type: "string" },
-                    precio: { type: "number" },
-                    stock: { type: "number" },
-                  },
-                },
+                schema: { $ref: "#/components/schemas/Producto" },
               },
             },
           },
@@ -151,21 +117,6 @@ const swaggerSpec = swaggerJsdoc({
               schema: { type: "string" },
             },
           ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["tenant_id", "usuario_id"],
-                  properties: {
-                    tenant_id: { type: "string" },
-                    usuario_id: { type: "string" },
-                  },
-                },
-              },
-            },
-          },
           responses: {
             200: { description: "Producto eliminado" },
           },
@@ -173,8 +124,9 @@ const swaggerSpec = swaggerJsdoc({
       },
     },
   },
-  apis: [], 
-});
+  apis: [],
+};
 
+const swaggerSpec = swaggerJsdoc(options);
 module.exports = { swaggerUi, swaggerSpec };
 

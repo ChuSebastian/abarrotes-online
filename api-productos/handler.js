@@ -46,46 +46,46 @@ module.exports.crearProducto = async (event) => {
   }
 };
 
-module.exports.listarProductos = async (event) => {
+module.exports.listarProductos = async () => {
   try {
-    const { tenant_id } = extraerUsuarioYTenant(event);
-    const limit = parseInt(event.queryStringParameters?.limit || "10");
-    const startKey = event.queryStringParameters?.startKey;
-
     const params = {
       TableName: TABLE_NAME,
-      KeyConditionExpression: "tenant_id = :tenant_id",
-      ExpressionAttributeValues: { ":tenant_id": tenant_id },
-      Limit: limit,
+      Limit: 50, 
     };
 
-    if (startKey) {
-      params.ExclusiveStartKey = { tenant_id, codigo: startKey };
-    }
+    const result = await dynamodb.scan(params).promise();
 
-    const result = await dynamodb.query(params).promise();
-    return { statusCode: 200, body: JSON.stringify(result) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result),
+    };
   } catch (e) {
-    return { statusCode: 400, body: JSON.stringify({ error: e.message }) };
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: e.message }),
+    };
   }
 };
 
 module.exports.buscarProducto = async (event) => {
   try {
-    const { tenant_id } = extraerUsuarioYTenant(event);
     const codigo = event.pathParameters?.codigo;
     if (!codigo) throw new Error("Código no proporcionado");
 
-    const result = await dynamodb.get({
+    const result = await dynamodb.scan({
       TableName: TABLE_NAME,
-      Key: { tenant_id, codigo }
+      FilterExpression: "codigo = :codigo",
+      ExpressionAttributeValues: {
+        ":codigo": codigo,
+      },
+      Limit: 1,
     }).promise();
 
-    if (!result.Item) {
+    if (result.Items.length === 0) {
       return { statusCode: 404, body: JSON.stringify({ error: "Producto no encontrado" }) };
     }
 
-    return { statusCode: 200, body: JSON.stringify(result.Item) };
+    return { statusCode: 200, body: JSON.stringify(result.Items[0]) };
   } catch (e) {
     return { statusCode: 400, body: JSON.stringify({ error: e.message }) };
   }
