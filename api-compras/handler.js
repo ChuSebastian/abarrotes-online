@@ -3,11 +3,14 @@ const { v4: uuidv4 } = require("uuid");
 const { validarToken } = require("./utils/auth");
 const express = require("express");
 const serverless = require("serverless-http");
-const { swaggerUi, swaggerSpec } = require("./utils/swagger");
+const { swaggerUi, getSwaggerSpec } = require("./utils/swagger");
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
+const s3 = new AWS.S3();
+
 const TABLA_COMPRAS = process.env.TABLE_NAME;
 const TABLA_PRODUCTOS = process.env.PRODUCTOS_TABLE_NAME;
+const BUCKET_COMPRAS = process.env.BUCKET_COMPRAS;
 
 const buildResponse = (statusCode, body) => ({
   statusCode,
@@ -28,7 +31,6 @@ module.exports.comprar = async (event) => {
     for (const producto of datos.productos) {
       const { producto_id, cantidad } = producto;
 
-      // Obtener producto desde DynamoDB
       const resultado = await dynamo
         .get({
           TableName: TABLA_PRODUCTOS,
@@ -56,7 +58,6 @@ module.exports.comprar = async (event) => {
         });
       }
 
-      // Descontar stock
       await dynamo
         .update({
           TableName: TABLA_PRODUCTOS,
@@ -124,7 +125,6 @@ module.exports.swaggerDocs = async (event, context) => {
   const { stage, domainName } = event.requestContext;
   const baseUrl = `https://${domainName}/${stage}`;
 
-  const { swaggerUi, getSwaggerSpec } = require("./utils/swagger");
   const swaggerSpec = getSwaggerSpec(baseUrl);
 
   app.use((req, res, next) => {
@@ -134,7 +134,31 @@ module.exports.swaggerDocs = async (event, context) => {
   });
 
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
   const handler = serverless(app);
   return handler(event, context);
+};
+
+module.exports.actualizarCompras = async (event) => {
+  for (const record of event.Records) {
+    if (record.eventName !== "INSERT") continue;
+
+    const compra = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
+    const { tenant_id, id, fecha } = compra;
+
+    const fechaISO = new Date(fecha).toISOString();
+    const [año, mes, dia] = fechaISO.split("T")[0].split("-");
+
+    const key = `${tenant_id}/compras/${año}/${mes}/${dia}/${id}.json`;
+
+    await s3
+      .putObject({
+        Bucket: BUCKET_COMPRAS,
+        Key: key,
+        Body: JSON.stringify(compra),
+        ContentType: "application/json",
+      })
+      .promise();
+  }
 };
 
