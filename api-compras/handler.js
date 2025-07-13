@@ -4,8 +4,6 @@ const { validarToken } = require("./utils/auth");
 const express = require("express");
 const serverless = require("serverless-http");
 const { swaggerUi, getSwaggerSpec } = require("./utils/swagger");
-const s3 = new AWS.S3();
-
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
 
