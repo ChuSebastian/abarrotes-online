@@ -4,6 +4,7 @@ const { validarToken } = require("./utils/auth");
 const express = require("express");
 const serverless = require("serverless-http");
 const { swaggerUi, getSwaggerSpec } = require("./utils/swagger");
+const s3 = new AWS.S3();
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
@@ -139,26 +140,31 @@ module.exports.swaggerDocs = async (event, context) => {
   return handler(event, context);
 };
 
+
 module.exports.actualizarCompras = async (event) => {
-  for (const record of event.Records) {
-    if (record.eventName !== "INSERT") continue;
+  try {
+    for (const record of event.Records) {
+      if (record.eventName === "INSERT") {
+        const newImage = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
+        
+        const fecha = newImage.fecha.split("T")[0]; 
+        const tenantId = newImage.tenant_id;
+        const compraId = newImage.id;
 
-    const compra = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
-    const { tenant_id, id, fecha } = compra;
+        const s3Key = `tenant_id=${tenantId}/fecha=${fecha}/${compraId}.json`;
 
-    const fechaISO = new Date(fecha).toISOString();
-    const [año, mes, dia] = fechaISO.split("T")[0].split("-");
+        await s3.putObject({
+          Bucket: process.env.COMPRAS_BUCKET,
+          Key: s3Key,
+          Body: JSON.stringify(newImage),
+          ContentType: "application/json",
+        }).promise();
 
-    const key = `${tenant_id}/compras/${año}/${mes}/${dia}/${id}.json`;
-
-    await s3
-      .putObject({
-        Bucket: BUCKET_COMPRAS,
-        Key: key,
-        Body: JSON.stringify(compra),
-        ContentType: "application/json",
-      })
-      .promise();
+        console.log(`Compra guardada en S3: ${s3Key}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error procesando stream:", error);
   }
 };
 

@@ -55,6 +55,8 @@ functions:
             Fn::GetAtt: [ComprasTable, StreamArn]
           batchSize: 1
           startingPosition: LATEST
+    environment:
+      COMPRAS_BUCKET: ${self:provider.environment.COMPRAS_BUCKET}
 
 resources:
   Resources:
