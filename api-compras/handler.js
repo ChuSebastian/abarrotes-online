@@ -120,11 +120,19 @@ module.exports.obtenerCompras = async (event) => {
 
 module.exports.swaggerDocs = async (event, context) => {
   const app = express();
+
+  const { stage, domainName } = event.requestContext;
+  const baseUrl = `https://${domainName}/${stage}`;
+
+  const { swaggerUi, getSwaggerSpec } = require("./utils/swagger");
+  const swaggerSpec = getSwaggerSpec(baseUrl);
+
   app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     next();
   });
+
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   const handler = serverless(app);
   return handler(event, context);
