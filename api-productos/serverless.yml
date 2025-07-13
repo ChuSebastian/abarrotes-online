@@ -89,7 +89,7 @@ functions:
     events:
       - http:
           path: docs/{proxy+}
-          method: get
+          method: any
           cors: true
 
 resources:
