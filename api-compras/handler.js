@@ -28,10 +28,14 @@ module.exports.comprar = async (event) => {
     for (const producto of datos.productos) {
       const { producto_id, cantidad } = producto;
 
+      // 🔧 Usa correctamente la clave: tenant_id + codigo
       const resultado = await dynamo
         .get({
           TableName: TABLA_PRODUCTOS,
-          Key: { tenant_id, producto_id },
+          Key: {
+            tenant_id,
+            codigo: producto_id,
+          },
         })
         .promise();
 
@@ -46,10 +50,14 @@ module.exports.comprar = async (event) => {
         });
       }
 
+      // 🔧 Usa correctamente la clave para actualizar también
       await dynamo
         .update({
           TableName: TABLA_PRODUCTOS,
-          Key: { tenant_id, producto_id },
+          Key: {
+            tenant_id,
+            codigo: producto_id,
+          },
           UpdateExpression: "SET stock = stock - :cant",
           ConditionExpression: "stock >= :cant",
           ExpressionAttributeValues: {
@@ -115,3 +123,4 @@ module.exports.swaggerDocs = async (event, context) => {
   const handler = serverless(app);
   return handler(event, context);
 };
+
