@@ -182,8 +182,6 @@ module.exports.actualizarProductos = async (event) => {
 };
 
 
-
-
 module.exports.swaggerDocs = async (event, context) => {
   const app = express();
 
@@ -193,9 +191,19 @@ module.exports.swaggerDocs = async (event, context) => {
     next();
   });
 
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  const host = event.headers["Host"];
+  const stage = event.requestContext.stage;
+  const basePath = `https://${host}/${stage}`;
+
+  const dynamicSpec = {
+    ...swaggerSpec,
+    servers: [{ url: basePath }],
+  };
+
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(dynamicSpec));
 
   const handler = serverless(app);
   return handler(event, context);
 };
+
 
