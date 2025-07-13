@@ -7,25 +7,10 @@ const swaggerSpec = {
     version: "1.0.0",
     description: "Documentación de la API de productos",
   },
-  components: {
-    securitySchemes: {
-      bearerAuth: {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-      },
-    },
-  },
-  security: [
-    {
-      bearerAuth: [],
-    },
-  ],
   paths: {
     "/productos": {
       get: {
         summary: "Listar todos los productos",
-        security: [{ bearerAuth: [] }],
         responses: {
           200: { description: "Lista de productos" },
           500: { description: "Error interno" },
@@ -33,7 +18,6 @@ const swaggerSpec = {
       },
       post: {
         summary: "Crear un nuevo producto",
-        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -62,7 +46,6 @@ const swaggerSpec = {
     "/productos/{codigo}": {
       get: {
         summary: "Buscar producto por código",
-        security: [{ bearerAuth: [] }],
         parameters: [
           {
             name: "codigo",
@@ -78,7 +61,6 @@ const swaggerSpec = {
       },
       put: {
         summary: "Modificar un producto",
-        security: [{ bearerAuth: [] }],
         parameters: [
           {
             name: "codigo",
@@ -109,7 +91,6 @@ const swaggerSpec = {
       },
       delete: {
         summary: "Eliminar un producto",
-        security: [{ bearerAuth: [] }],
         parameters: [
           {
             name: "codigo",

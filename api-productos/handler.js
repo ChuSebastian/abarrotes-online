@@ -1,17 +1,23 @@
 const AWS = require("aws-sdk");
 const axios = require("axios");
-const { validarToken } = require("./utils/auth");
 const express = require("express");
 const serverless = require("serverless-http");
 const { swaggerUi, swaggerSpec } = require("./utils/swagger");
 
-
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.TABLE_NAME;
 
+function obtenerTenant(event) {
+  const tenant_id = event.headers?.["x-tenant-id"];
+  if (tenant_id === "admin" || tenant_id === "usuario") {
+    return tenant_id;
+  }
+  return "usuario";
+}
+
 module.exports.crearProducto = async (event) => {
   try {
-    const tenant_id = validarToken(event);
+    const tenant_id = obtenerTenant(event);
     const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
 
     const item = {
@@ -35,7 +41,7 @@ module.exports.crearProducto = async (event) => {
 
 module.exports.listarProductos = async (event) => {
   try {
-    const tenant_id = validarToken(event);
+    const tenant_id = obtenerTenant(event);
     const limit = parseInt(event.queryStringParameters?.limit || "10");
     const startKey = event.queryStringParameters?.startKey;
 
@@ -59,7 +65,7 @@ module.exports.listarProductos = async (event) => {
 
 module.exports.buscarProducto = async (event) => {
   try {
-    const tenant_id = validarToken(event);
+    const tenant_id = obtenerTenant(event);
     const codigo = event.pathParameters?.codigo;
     if (!codigo) {
       throw new Error("Código no proporcionado");
@@ -82,7 +88,7 @@ module.exports.buscarProducto = async (event) => {
 
 module.exports.modificarProducto = async (event) => {
   try {
-    const tenant_id = validarToken(event);
+    const tenant_id = obtenerTenant(event);
     const codigo = event.pathParameters?.codigo;
     if (!codigo) {
       throw new Error("Código no proporcionado");
@@ -114,7 +120,7 @@ module.exports.modificarProducto = async (event) => {
 
 module.exports.eliminarProducto = async (event) => {
   try {
-    const tenant_id = validarToken(event);
+    const tenant_id = obtenerTenant(event);
     const codigo = event.pathParameters?.codigo;
     if (!codigo) {
       throw new Error("Código no proporcionado");
@@ -131,28 +137,6 @@ module.exports.eliminarProducto = async (event) => {
   }
 };
 
-// module.exports.procesarCambiosDynamo = async (event) => {
-//   for (const record of event.Records) {
-//     const tipo = record.eventName;
-//     const nuevo = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage || {});
-//     const anterior = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.OldImage || {});
-// 
-//     console.log("🔄 Evento recibido:", tipo);
-// 
-//     if (tipo === "INSERT") {
-//       console.log("🟢 Producto creado:", nuevo);
-//     } else if (tipo === "MODIFY") {
-//       console.log("🟡 Producto modificado:");
-//       console.log("Antes:", anterior);
-//       console.log("Después:", nuevo);
-//     } else if (tipo === "REMOVE") {
-//       console.log("🔴 Producto eliminado:", anterior);
-//     }
-//   }
-// 
-//   return { statusCode: 200 };
-// };
-
 module.exports.actualizarProductos = async (event) => {
   for (const record of event.Records) {
     const tipo = record.eventName;
@@ -162,7 +146,6 @@ module.exports.actualizarProductos = async (event) => {
     const tenant_id = nuevo.tenant_id || anterior.tenant_id;
     const codigo = nuevo.codigo || anterior.codigo;
 
-    // Usamos la IP elástica fija de Elasticsearch
     const elasticUrl = `http://52.44.161.7:9200/productos-${tenant_id}/_doc/${codigo}`;
 
     try {
@@ -180,7 +163,6 @@ module.exports.actualizarProductos = async (event) => {
 
   return { statusCode: 200 };
 };
-
 
 module.exports.swaggerDocs = async (event, context) => {
   const app = express();
@@ -205,5 +187,4 @@ module.exports.swaggerDocs = async (event, context) => {
   const handler = serverless(app);
   return handler(event, context);
 };
-
 

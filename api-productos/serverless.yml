@@ -11,7 +11,6 @@ provider:
     role: arn:aws:iam::971808350791:role/LabRole
   environment:
     TABLE_NAME: ProductosTable-${self:provider.stage}
-    JWT_SECRET: ${env:JWT_SECRET}
 
 package:
   include:
@@ -59,18 +58,6 @@ functions:
           path: /productos/{codigo}
           method: delete
           cors: true
-
-  procesarCambiosDynamo:
-    handler: handler.procesarCambiosDynamo
-    events:
-      - stream:
-          type: dynamodb
-          arn:
-            Fn::GetAtt:
-              - ProductosTable
-              - StreamArn
-          batchSize: 5
-          startingPosition: LATEST
 
   actualizarProductos:
     handler: handler.actualizarProductos
