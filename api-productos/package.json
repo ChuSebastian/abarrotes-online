@@ -1,9 +1,12 @@
 {
   "name": "api-productos",
   "version": "1.0.0",
-  "dependencies": {    
+  "dependencies": {
     "aws-sdk": "^2.1392.0",
+    "axios": "^1.10.0",
+    "express": "^5.1.0",
     "jsonwebtoken": "^9.0.0",
+    "serverless-http": "^3.2.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^9.0.0"
