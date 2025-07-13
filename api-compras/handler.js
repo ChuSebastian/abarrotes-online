@@ -28,7 +28,7 @@ module.exports.comprar = async (event) => {
     for (const producto of datos.productos) {
       const { producto_id, cantidad } = producto;
 
-      // 🔧 Usa correctamente la clave: tenant_id + codigo
+      // Obtener producto desde DynamoDB
       const resultado = await dynamo
         .get({
           TableName: TABLA_PRODUCTOS,
@@ -50,7 +50,13 @@ module.exports.comprar = async (event) => {
         });
       }
 
-      // 🔧 Usa correctamente la clave para actualizar también
+      if (typeof item.precio !== "number") {
+        return buildResponse(500, {
+          error: `El producto ${producto_id} no tiene un precio numérico válido.`,
+        });
+      }
+
+      // Descontar stock
       await dynamo
         .update({
           TableName: TABLA_PRODUCTOS,
@@ -66,8 +72,8 @@ module.exports.comprar = async (event) => {
         })
         .promise();
 
-      total += item.precio_unitario * cantidad;
-      producto.precio_unitario = item.precio_unitario;
+      total += item.precio * cantidad;
+      producto.precio_unitario = item.precio;
     }
 
     const compra = {
