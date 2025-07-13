@@ -7,31 +7,38 @@ const { swaggerUi, swaggerSpec } = require("./utils/swagger");
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.TABLE_NAME;
 
-function obtenerTenant(event) {
-  const tenant_id = event.headers?.["x-tenant-id"];
-  if (tenant_id === "admin" || tenant_id === "usuario") {
-    return tenant_id;
-  }
-  return "usuario";
+function extraerUsuarioYTenant(event) {
+  const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+  const { tenant_id, usuario_id } = body || {};
+  if (!tenant_id || !usuario_id) throw new Error("Faltan tenant_id o usuario_id");
+  return { tenant_id, usuario_id, body };
 }
 
 module.exports.crearProducto = async (event) => {
   try {
-    const tenant_id = obtenerTenant(event);
-    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    const { tenant_id, usuario_id, body } = extraerUsuarioYTenant(event);
+
+    if (tenant_id !== "admin") {
+      return { statusCode: 403, body: JSON.stringify({ message: "Solo el admin puede crear productos" }) };
+    }
+
+    const { codigo, nombre, precio, stock } = body;
+
+    if (!codigo || !nombre || precio === undefined || stock === undefined) {
+      return { statusCode: 400, body: JSON.stringify({ message: "Faltan campos obligatorios" }) };
+    }
 
     const item = {
       tenant_id,
-      codigo: body.codigo,
-      nombre: body.nombre,
-      precio: body.precio,
-      stock: body.stock
+      usuario_id,
+      codigo,
+      nombre,
+      precio,
+      stock,
+      fecha_creacion: new Date().toISOString(),
     };
 
-    await dynamodb.put({
-      TableName: TABLE_NAME,
-      Item: item
-    }).promise();
+    await dynamodb.put({ TableName: TABLE_NAME, Item: item }).promise();
 
     return { statusCode: 201, body: JSON.stringify({ message: "Producto creado" }) };
   } catch (e) {
@@ -41,7 +48,7 @@ module.exports.crearProducto = async (event) => {
 
 module.exports.listarProductos = async (event) => {
   try {
-    const tenant_id = obtenerTenant(event);
+    const { tenant_id } = extraerUsuarioYTenant(event);
     const limit = parseInt(event.queryStringParameters?.limit || "10");
     const startKey = event.queryStringParameters?.startKey;
 
@@ -49,7 +56,7 @@ module.exports.listarProductos = async (event) => {
       TableName: TABLE_NAME,
       KeyConditionExpression: "tenant_id = :tenant_id",
       ExpressionAttributeValues: { ":tenant_id": tenant_id },
-      Limit: limit
+      Limit: limit,
     };
 
     if (startKey) {
@@ -65,11 +72,9 @@ module.exports.listarProductos = async (event) => {
 
 module.exports.buscarProducto = async (event) => {
   try {
-    const tenant_id = obtenerTenant(event);
+    const { tenant_id } = extraerUsuarioYTenant(event);
     const codigo = event.pathParameters?.codigo;
-    if (!codigo) {
-      throw new Error("Código no proporcionado");
-    }
+    if (!codigo) throw new Error("Código no proporcionado");
 
     const result = await dynamodb.get({
       TableName: TABLE_NAME,
@@ -88,16 +93,13 @@ module.exports.buscarProducto = async (event) => {
 
 module.exports.modificarProducto = async (event) => {
   try {
-    const tenant_id = obtenerTenant(event);
+    const { tenant_id, body } = extraerUsuarioYTenant(event);
     const codigo = event.pathParameters?.codigo;
-    if (!codigo) {
-      throw new Error("Código no proporcionado");
-    }
+    if (tenant_id !== "admin") return { statusCode: 403, body: JSON.stringify({ message: "No autorizado" }) };
+    if (!codigo) throw new Error("Código no proporcionado");
 
-    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
-
-    if (!body || !body.nombre || body.precio === undefined || body.stock === undefined) {
-      throw new Error("Faltan campos obligatorios en el body");
+    if (!body.nombre || body.precio === undefined || body.stock === undefined) {
+      throw new Error("Faltan campos obligatorios");
     }
 
     const params = {
@@ -120,16 +122,12 @@ module.exports.modificarProducto = async (event) => {
 
 module.exports.eliminarProducto = async (event) => {
   try {
-    const tenant_id = obtenerTenant(event);
+    const { tenant_id } = extraerUsuarioYTenant(event);
     const codigo = event.pathParameters?.codigo;
-    if (!codigo) {
-      throw new Error("Código no proporcionado");
-    }
+    if (tenant_id !== "admin") return { statusCode: 403, body: JSON.stringify({ message: "No autorizado" }) };
+    if (!codigo) throw new Error("Código no proporcionado");
 
-    await dynamodb.delete({
-      TableName: TABLE_NAME,
-      Key: { tenant_id, codigo }
-    }).promise();
+    await dynamodb.delete({ TableName: TABLE_NAME, Key: { tenant_id, codigo } }).promise();
 
     return { statusCode: 200, body: JSON.stringify({ message: "Producto eliminado" }) };
   } catch (e) {
@@ -145,7 +143,6 @@ module.exports.actualizarProductos = async (event) => {
 
     const tenant_id = nuevo.tenant_id || anterior.tenant_id;
     const codigo = nuevo.codigo || anterior.codigo;
-
     const elasticUrl = `http://52.44.161.7:9200/productos-${tenant_id}/_doc/${codigo}`;
 
     try {
