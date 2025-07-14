@@ -17,7 +17,6 @@ function extraerUsuarioYTenant(event) {
 module.exports.crearProducto = async (event) => {
   try {
     const { tenant_id, usuario_id, body } = extraerUsuarioYTenant(event);
-
     if (tenant_id !== "admin") {
       return { statusCode: 403, body: JSON.stringify({ message: "Solo el admin puede crear productos" }) };
     }
@@ -38,7 +37,6 @@ module.exports.crearProducto = async (event) => {
     };
 
     await dynamodb.put({ TableName: TABLE_NAME, Item: item }).promise();
-
     return { statusCode: 201, body: JSON.stringify({ message: "Producto creado" }) };
   } catch (e) {
     return { statusCode: 400, body: JSON.stringify({ error: e.message }) };
@@ -54,15 +52,15 @@ module.exports.listarProductos = async (event) => {
       TableName: TABLE_NAME,
       KeyConditionExpression: "tenant_id = :t",
       ExpressionAttributeValues: {
-        ":t": tenant_id
-      }
+        ":t": tenant_id,
+      },
     };
 
     const result = await dynamodb.query(params).promise();
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ Items: result.Items }), 
+      body: JSON.stringify({ Items: result.Items }),
     };
   } catch (e) {
     return {
@@ -80,7 +78,7 @@ module.exports.buscarProducto = async (event) => {
 
     const params = {
       TableName: TABLE_NAME,
-      Key: { tenant_id, codigo }
+      Key: { tenant_id, codigo },
     };
 
     const result = await dynamodb.get(params).promise();
@@ -113,8 +111,8 @@ module.exports.modificarProducto = async (event) => {
       ExpressionAttributeValues: {
         ":n": body.nombre,
         ":p": body.precio,
-        ":s": body.stock
-      }
+        ":s": body.stock,
+      },
     };
 
     await dynamodb.update(params).promise();
@@ -165,6 +163,7 @@ module.exports.actualizarProductos = async (event) => {
   return { statusCode: 200 };
 };
 
+// EXPRESS + SWAGGER
 const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
@@ -173,10 +172,13 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/docs", (req, res) => {
+  res.redirect("/docs/");
+});
+
 app.use("/docs", swaggerUi.serve, (req, res, next) => {
   const host = req.headers["host"];
-  const pathParts = req.originalUrl.split("/").filter(Boolean);
-  const stage = pathParts[1] || "dev";
+  const stage = process.env.STAGE || "dev";
 
   const dynamicSpec = {
     ...swaggerSpec,
