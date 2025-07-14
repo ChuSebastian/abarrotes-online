@@ -43,13 +43,21 @@ const options = {
         },
         get: {
           summary: "Listar todos los productos",
+          parameters: [
+            {
+              name: "tenant_id",
+              in: "query",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
           responses: {
             200: {
               description: "Lista de productos",
               content: {
                 "application/json": {
                   schema: {
-                    type: "object",
+                    type: object,
                     properties: {
                       Items: {
                         type: "array",
@@ -70,6 +78,12 @@ const options = {
             {
               name: "codigo",
               in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "tenant_id",
+              in: "query",
               required: true,
               schema: { type: "string" },
             },
@@ -117,16 +131,23 @@ const options = {
               schema: { type: "string" },
             },
           ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["tenant_id", "usuario_id"],
+                  properties: {
+                    tenant_id: { type: "string" },
+                    usuario_id: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
           responses: {
             200: { description: "Producto eliminado" },
           },
         },
-      },
-    },
-  },
-  apis: [],
-};
-
-const swaggerSpec = swaggerJsdoc(options);
-module.exports = { swaggerUi, swaggerSpec };
 

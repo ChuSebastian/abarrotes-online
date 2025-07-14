@@ -23,15 +23,14 @@ module.exports.crearProducto = async (event) => {
     }
 
     const { codigo, nombre, precio, stock } = body;
-
     if (!codigo || !nombre || precio === undefined || stock === undefined) {
       return { statusCode: 400, body: JSON.stringify({ message: "Faltan campos obligatorios" }) };
     }
 
     const item = {
       tenant_id,
-      usuario_id,
       codigo,
+      usuario_id,
       nombre,
       precio,
       stock,
@@ -46,18 +45,24 @@ module.exports.crearProducto = async (event) => {
   }
 };
 
-module.exports.listarProductos = async () => {
+module.exports.listarProductos = async (event) => {
   try {
+    const tenant_id = event.queryStringParameters?.tenant_id;
+    if (!tenant_id) throw new Error("Falta tenant_id en query params");
+
     const params = {
       TableName: TABLE_NAME,
-      Limit: 50, 
+      KeyConditionExpression: "tenant_id = :t",
+      ExpressionAttributeValues: {
+        ":t": tenant_id
+      }
     };
 
-    const result = await dynamodb.scan(params).promise();
+    const result = await dynamodb.query(params).promise();
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result),
+      body: JSON.stringify({ Items: result.Items }),
     };
   } catch (e) {
     return {
@@ -69,23 +74,22 @@ module.exports.listarProductos = async () => {
 
 module.exports.buscarProducto = async (event) => {
   try {
+    const tenant_id = event.queryStringParameters?.tenant_id;
     const codigo = event.pathParameters?.codigo;
-    if (!codigo) throw new Error("Código no proporcionado");
+    if (!tenant_id || !codigo) throw new Error("Faltan tenant_id o código");
 
-    const result = await dynamodb.scan({
+    const params = {
       TableName: TABLE_NAME,
-      FilterExpression: "codigo = :codigo",
-      ExpressionAttributeValues: {
-        ":codigo": codigo,
-      },
-      Limit: 1,
-    }).promise();
+      Key: { tenant_id, codigo }
+    };
 
-    if (result.Items.length === 0) {
+    const result = await dynamodb.get(params).promise();
+
+    if (!result.Item) {
       return { statusCode: 404, body: JSON.stringify({ error: "Producto no encontrado" }) };
     }
 
-    return { statusCode: 200, body: JSON.stringify(result.Items[0]) };
+    return { statusCode: 200, body: JSON.stringify(result.Item) };
   } catch (e) {
     return { statusCode: 400, body: JSON.stringify({ error: e.message }) };
   }
