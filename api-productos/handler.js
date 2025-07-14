@@ -176,7 +176,7 @@ app.use((req, res, next) => {
 app.use("/docs", swaggerUi.serve, (req, res, next) => {
   const host = req.headers["host"];
   const pathParts = req.originalUrl.split("/").filter(Boolean);
-  const stage = pathParts[0] || "dev";
+  const stage = pathParts[1] || "dev";
 
   const dynamicSpec = {
     ...swaggerSpec,
