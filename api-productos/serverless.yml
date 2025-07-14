@@ -15,9 +15,8 @@ provider:
 
 package:
   include:
-    - node_modules/**
     - handler.js
-    - utils.js/**
+    - utils/**
 
 functions:
   crearProducto:

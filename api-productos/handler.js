@@ -62,7 +62,7 @@ module.exports.listarProductos = async (event) => {
 
     return {
       statusCode: 200,
-      Body: JSON.stringify({ Items: result.Items }), 
+      body: JSON.stringify({ Items: result.Items }), 
     };
   } catch (e) {
     return {
@@ -142,8 +142,8 @@ module.exports.eliminarProducto = async (event) => {
 module.exports.actualizarProductos = async (event) => {
   for (const record of event.Records) {
     const tipo = record.eventName;
-    const nuevo = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage || {});
-    const anterior = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.OldImage || {});
+    const nuevo = record.dynamodb.NewImage ? AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage) : {};
+    const anterior = record.dynamodb.OldImage ? AWS.DynamoDB.Converter.unmarshall(record.dynamodb.OldImage) : {};
 
     const tenant_id = nuevo.tenant_id || anterior.tenant_id;
     const codigo = nuevo.codigo || anterior.codigo;
@@ -165,9 +165,8 @@ module.exports.actualizarProductos = async (event) => {
   return { statusCode: 200 };
 };
 
-
 const app = express();
-
+app.use(express.json());
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -175,9 +174,9 @@ app.use((req, res, next) => {
 });
 
 app.use("/docs", swaggerUi.serve, (req, res, next) => {
-  const host = req.headers["host"]; 
-  const pathParts = req.originalUrl.split("/").filter(Boolean); 
-  const stage = pathParts[0] || "dev"; 
+  const host = req.headers["host"];
+  const pathParts = req.originalUrl.split("/").filter(Boolean);
+  const stage = pathParts[0] || "dev";
 
   const dynamicSpec = {
     ...swaggerSpec,
@@ -186,4 +185,6 @@ app.use("/docs", swaggerUi.serve, (req, res, next) => {
 
   swaggerUi.setup(dynamicSpec)(req, res, next);
 });
+
+module.exports.swaggerDocs = serverless(app);
 

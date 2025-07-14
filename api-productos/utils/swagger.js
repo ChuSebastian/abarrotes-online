@@ -8,7 +8,6 @@ const options = {
       version: "1.0.0",
       description: "Documentación de la API de Productos",
     },
-    // No incluir servers aquí. Se agregará dinámicamente.
     components: {
       schemas: {
         Producto: {
@@ -136,5 +135,6 @@ const swaggerSpec = swaggerJsdoc(options);
 
 module.exports = {
   swaggerSpec,
+  swaggerUi: require("swagger-ui-express"),
 };
 
