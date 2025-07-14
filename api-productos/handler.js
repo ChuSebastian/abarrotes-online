@@ -175,17 +175,15 @@ app.use((req, res, next) => {
 });
 
 app.use("/docs", swaggerUi.serve, (req, res, next) => {
-  const host = req.headers["host"];
-  const stage = req.originalUrl.split("/")[1]; // ej. "dev"
+  const host = req.headers["host"]; 
+  const pathParts = req.originalUrl.split("/").filter(Boolean); 
+  const stage = pathParts[0] || "dev"; 
+
   const dynamicSpec = {
     ...swaggerSpec,
-    servers: [{ url: `https://${host}/${stage}` }],
+    servers: [{ url: `https://${host}/${stage}`, description: `Stage: ${stage}` }],
   };
+
   swaggerUi.setup(dynamicSpec)(req, res, next);
 });
 
-const expressHandler = serverless(app);
-
-module.exports.swaggerDocs = async (event, context) => {
-  return await expressHandler(event, context);
-};

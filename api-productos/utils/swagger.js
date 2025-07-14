@@ -1,8 +1,4 @@
-const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
-
-// Obtener el stage desde variables de entorno (lo setea API Gateway automáticamente en Lambda)
-const stage = process.env.STAGE || "dev"; // fallback a 'dev' si no está definido
 
 const options = {
   definition: {
@@ -12,12 +8,7 @@ const options = {
       version: "1.0.0",
       description: "Documentación de la API de Productos",
     },
-    servers: [
-      {
-        url: `https://ny6tm0pmo8.execute-api.us-east-1.amazonaws.com/${stage}`,
-        description: `Stage: ${stage}`,
-      },
-    ],
+    // No incluir servers aquí. Se agregará dinámicamente.
     components: {
       schemas: {
         Producto: {
@@ -84,18 +75,8 @@ const options = {
         get: {
           summary: "Buscar producto por código",
           parameters: [
-            {
-              name: "codigo",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-            {
-              name: "tenant_id",
-              in: "query",
-              required: true,
-              schema: { type: "string" },
-            },
+            { name: "codigo", in: "path", required: true, schema: { type: "string" } },
+            { name: "tenant_id", in: "query", required: true, schema: { type: "string" } },
           ],
           responses: {
             200: {
@@ -110,14 +91,7 @@ const options = {
         },
         put: {
           summary: "Modificar un producto",
-          parameters: [
-            {
-              name: "codigo",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          parameters: [{ name: "codigo", in: "path", required: true, schema: { type: "string" } }],
           requestBody: {
             required: true,
             content: {
@@ -132,14 +106,7 @@ const options = {
         },
         delete: {
           summary: "Eliminar un producto",
-          parameters: [
-            {
-              name: "codigo",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          parameters: [{ name: "codigo", in: "path", required: true, schema: { type: "string" } }],
           requestBody: {
             required: true,
             content: {
@@ -168,7 +135,6 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 module.exports = {
-  swaggerUi,
   swaggerSpec,
 };
 
