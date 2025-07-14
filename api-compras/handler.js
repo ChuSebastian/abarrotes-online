@@ -38,11 +38,12 @@ module.exports.comprar = async (event) => {
     for (const producto of productos) {
       const { producto_id, cantidad } = producto;
 
+      // ✅ Buscar siempre productos creados por los admin
       const resultado = await dynamo
         .get({
           TableName: TABLA_PRODUCTOS,
           Key: {
-            tenant_id,
+            tenant_id: "admin",
             codigo: producto_id,
           },
         })
@@ -65,11 +66,12 @@ module.exports.comprar = async (event) => {
         });
       }
 
+      // ✅ Actualizar stock en productos de tenant admin
       await dynamo
         .update({
           TableName: TABLA_PRODUCTOS,
           Key: {
-            tenant_id,
+            tenant_id: "admin",
             codigo: producto_id,
           },
           UpdateExpression: "SET stock = stock - :cant",
