@@ -14,33 +14,36 @@ function getSwaggerSpec(baseUrl) {
         description: "Dynamic stage base URL",
       },
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
     paths: {
       "/compras": {
         get: {
-          summary: "Obtener historial de compras",
-          security: [{ bearerAuth: [] }],
+          summary: "Obtener historial de compras del usuario",
+          parameters: [
+            {
+              name: "tenant_id",
+              in: "query",
+              required: true,
+              schema: {
+                type: "string",
+              },
+            },
+            {
+              name: "usuario_id",
+              in: "query",
+              required: true,
+              schema: {
+                type: "string",
+              },
+            },
+          ],
           responses: {
-            "200": { description: "Lista de compras" },
+            "200": { description: "Lista de compras del usuario" },
+            "400": { description: "Faltan parámetros" },
             "500": { description: "Error interno" },
           },
         },
         post: {
           summary: "Registrar una compra",
-          security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,
             content: {
@@ -48,6 +51,8 @@ function getSwaggerSpec(baseUrl) {
                 schema: {
                   type: "object",
                   properties: {
+                    tenant_id: { type: "string" },
+                    usuario_id: { type: "string" },
                     productos: {
                       type: "array",
                       items: {
@@ -60,14 +65,15 @@ function getSwaggerSpec(baseUrl) {
                       },
                     },
                   },
-                  required: ["productos"],
+                  required: ["tenant_id", "usuario_id", "productos"],
                 },
               },
             },
           },
           responses: {
             "201": { description: "Compra creada" },
-            "400": { description: "Stock insuficiente" },
+            "400": { description: "Stock insuficiente o datos inválidos" },
+            "403": { description: "No permitido para este tenant" },
             "404": { description: "Producto no encontrado" },
             "500": { description: "Error interno" },
           },
