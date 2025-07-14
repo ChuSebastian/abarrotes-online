@@ -56,7 +56,7 @@ functions:
           batchSize: 1
           startingPosition: LATEST
     environment:
-      COMPRAS_BUCKET: ${self:provider.environment.COMPRAS_BUCKET}
+      BUCKET_COMPRAS: compras-por-tenant-${self:provider.stage}  # 🔧 Fijo aquí
 
 resources:
   Resources:
