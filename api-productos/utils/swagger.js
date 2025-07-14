@@ -27,7 +27,7 @@ const options = {
     paths: {
       "/productos": {
         post: {
-          summary: "Crear un producto",
+          summary: "Crear un producto (solo admin)",
           requestBody: {
             required: true,
             content: {
@@ -38,18 +38,11 @@ const options = {
           },
           responses: {
             201: { description: "Producto creado" },
+            403: { description: "No autorizado" },
           },
         },
         get: {
-          summary: "Listar todos los productos",
-          parameters: [
-            {
-              name: "tenant_id",
-              in: "query",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          summary: "Listar todos los productos (visibles para todos)",
           responses: {
             200: {
               description: "Lista de productos",
@@ -72,10 +65,9 @@ const options = {
       },
       "/productos/{codigo}": {
         get: {
-          summary: "Buscar producto por código",
+          summary: "Buscar producto por código (acceso público)",
           parameters: [
             { name: "codigo", in: "path", required: true, schema: { type: "string" } },
-            { name: "tenant_id", in: "query", required: true, schema: { type: "string" } },
           ],
           responses: {
             200: {
@@ -89,7 +81,7 @@ const options = {
           },
         },
         put: {
-          summary: "Modificar un producto",
+          summary: "Modificar un producto (solo admin)",
           parameters: [{ name: "codigo", in: "path", required: true, schema: { type: "string" } }],
           requestBody: {
             required: true,
@@ -101,10 +93,11 @@ const options = {
           },
           responses: {
             200: { description: "Producto actualizado" },
+            403: { description: "No autorizado" },
           },
         },
         delete: {
-          summary: "Eliminar un producto",
+          summary: "Eliminar un producto (solo admin)",
           parameters: [{ name: "codigo", in: "path", required: true, schema: { type: "string" } }],
           requestBody: {
             required: true,
@@ -112,10 +105,9 @@ const options = {
               "application/json": {
                 schema: {
                   type: "object",
-                  required: ["tenant_id", "usuario_id"],
+                  required: ["tenant_id"],
                   properties: {
                     tenant_id: { type: "string" },
-                    usuario_id: { type: "string" },
                   },
                 },
               },
@@ -123,6 +115,7 @@ const options = {
           },
           responses: {
             200: { description: "Producto eliminado" },
+            403: { description: "No autorizado" },
           },
         },
       },

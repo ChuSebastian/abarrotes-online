@@ -7,16 +7,24 @@ const { swaggerUi, swaggerSpec } = require("./utils/swagger");
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.TABLE_NAME;
 
-function extraerUsuarioYTenant(event) {
+// Extrae tenant_id y usuario_id con validaciones condicionales
+function extraerDatos(event) {
   const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
   const { tenant_id, usuario_id } = body || {};
-  if (!tenant_id || !usuario_id) throw new Error("Faltan tenant_id o usuario_id");
+
+  if (!tenant_id) throw new Error("Falta tenant_id");
+
+  if (tenant_id !== "admin" && !usuario_id) {
+    throw new Error("Falta usuario_id para tenant usuario");
+  }
+
   return { tenant_id, usuario_id, body };
 }
 
 module.exports.crearProducto = async (event) => {
   try {
-    const { tenant_id, usuario_id, body } = extraerUsuarioYTenant(event);
+    const { tenant_id, usuario_id, body } = extraerDatos(event);
+
     if (tenant_id !== "admin") {
       return { statusCode: 403, body: JSON.stringify({ message: "Solo el admin puede crear productos" }) };
     }
@@ -29,7 +37,7 @@ module.exports.crearProducto = async (event) => {
     const item = {
       tenant_id,
       codigo,
-      usuario_id,
+      usuario_id: usuario_id || "admin",
       nombre,
       precio,
       stock,
@@ -43,16 +51,13 @@ module.exports.crearProducto = async (event) => {
   }
 };
 
-module.exports.listarProductos = async (event) => {
+module.exports.listarProductos = async () => {
   try {
-    const tenant_id = event.queryStringParameters?.tenant_id;
-    if (!tenant_id) throw new Error("Falta tenant_id en query params");
-
     const params = {
       TableName: TABLE_NAME,
       KeyConditionExpression: "tenant_id = :t",
       ExpressionAttributeValues: {
-        ":t": tenant_id,
+        ":t": "admin",
       },
     };
 
@@ -72,13 +77,12 @@ module.exports.listarProductos = async (event) => {
 
 module.exports.buscarProducto = async (event) => {
   try {
-    const tenant_id = event.queryStringParameters?.tenant_id;
     const codigo = event.pathParameters?.codigo;
-    if (!tenant_id || !codigo) throw new Error("Faltan tenant_id o código");
+    if (!codigo) throw new Error("Falta el código del producto");
 
     const params = {
       TableName: TABLE_NAME,
-      Key: { tenant_id, codigo },
+      Key: { tenant_id: "admin", codigo },
     };
 
     const result = await dynamodb.get(params).promise();
@@ -95,11 +99,14 @@ module.exports.buscarProducto = async (event) => {
 
 module.exports.modificarProducto = async (event) => {
   try {
-    const { tenant_id, body } = extraerUsuarioYTenant(event);
+    const { tenant_id, body } = extraerDatos(event);
     const codigo = event.pathParameters?.codigo;
-    if (tenant_id !== "admin") return { statusCode: 403, body: JSON.stringify({ message: "No autorizado" }) };
-    if (!codigo) throw new Error("Código no proporcionado");
 
+    if (tenant_id !== "admin") {
+      return { statusCode: 403, body: JSON.stringify({ message: "Solo admin puede modificar productos" }) };
+    }
+
+    if (!codigo) throw new Error("Código no proporcionado");
     if (!body.nombre || body.precio === undefined || body.stock === undefined) {
       throw new Error("Faltan campos obligatorios");
     }
@@ -124,13 +131,16 @@ module.exports.modificarProducto = async (event) => {
 
 module.exports.eliminarProducto = async (event) => {
   try {
-    const { tenant_id } = extraerUsuarioYTenant(event);
+    const { tenant_id } = extraerDatos(event);
     const codigo = event.pathParameters?.codigo;
-    if (tenant_id !== "admin") return { statusCode: 403, body: JSON.stringify({ message: "No autorizado" }) };
+
+    if (tenant_id !== "admin") {
+      return { statusCode: 403, body: JSON.stringify({ message: "Solo admin puede eliminar productos" }) };
+    }
+
     if (!codigo) throw new Error("Código no proporcionado");
 
     await dynamodb.delete({ TableName: TABLE_NAME, Key: { tenant_id, codigo } }).promise();
-
     return { statusCode: 200, body: JSON.stringify({ message: "Producto eliminado" }) };
   } catch (e) {
     return { statusCode: 400, body: JSON.stringify({ error: e.message }) };
