@@ -1,6 +1,9 @@
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 
+// Obtener el stage desde variables de entorno (lo setea API Gateway automáticamente en Lambda)
+const stage = process.env.STAGE || "dev"; // fallback a 'dev' si no está definido
+
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -9,6 +12,12 @@ const options = {
       version: "1.0.0",
       description: "Documentación de la API de Productos",
     },
+    servers: [
+      {
+        url: `https://ny6tm0pmo8.execute-api.us-east-1.amazonaws.com/${stage}`,
+        description: `Stage: ${stage}`,
+      },
+    ],
     components: {
       schemas: {
         Producto: {

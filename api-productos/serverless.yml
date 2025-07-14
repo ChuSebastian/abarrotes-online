@@ -11,6 +11,7 @@ provider:
     role: arn:aws:iam::971808350791:role/LabRole
   environment:
     TABLE_NAME: ProductosTable-${self:provider.stage}
+    STAGE: ${self:provider.stage} # Para que Swagger pueda leer el stage dinámicamente
 
 package:
   include:
