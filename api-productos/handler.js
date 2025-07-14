@@ -62,7 +62,7 @@ module.exports.listarProductos = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ Items: result.Items }),
+      Body: JSON.stringify({ Items: result.Items }), 
     };
   } catch (e) {
     return {
@@ -165,27 +165,27 @@ module.exports.actualizarProductos = async (event) => {
   return { statusCode: 200 };
 };
 
-module.exports.swaggerDocs = async (event, context) => {
-  const app = express();
 
-  app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    next();
-  });
+const app = express();
 
-  const host = event.headers["Host"];
-  const stage = event.requestContext.stage;
-  const basePath = `https://${host}/${stage}`;
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 
+app.use("/docs", swaggerUi.serve, (req, res, next) => {
+  const host = req.headers["host"];
+  const stage = req.originalUrl.split("/")[1]; // ej. "dev"
   const dynamicSpec = {
     ...swaggerSpec,
-    servers: [{ url: basePath }],
+    servers: [{ url: `https://${host}/${stage}` }],
   };
+  swaggerUi.setup(dynamicSpec)(req, res, next);
+});
 
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(dynamicSpec));
+const expressHandler = serverless(app);
 
-  const handler = serverless(app);
-  return handler(event, context);
+module.exports.swaggerDocs = async (event, context) => {
+  return await expressHandler(event, context);
 };
-
