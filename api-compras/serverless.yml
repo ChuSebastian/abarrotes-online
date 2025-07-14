@@ -12,7 +12,7 @@ provider:
   environment:
     TABLE_NAME: ComprasTable-${self:provider.stage}
     PRODUCTOS_TABLE_NAME: ProductosTable-${self:provider.stage}
-    COMPRAS_BUCKET: compras-por-tenant-${self:provider.stage}
+    BUCKET_COMPRAS: compras-por-tenant-${self:provider.stage}
     JWT_SECRET: ${env:JWT_SECRET}
 
 package:
