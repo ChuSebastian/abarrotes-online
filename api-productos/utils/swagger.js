@@ -57,7 +57,7 @@ const options = {
               content: {
                 "application/json": {
                   schema: {
-                    type: object,
+                    type: "object",
                     properties: {
                       Items: {
                         type: "array",
@@ -150,4 +150,16 @@ const options = {
             200: { description: "Producto eliminado" },
           },
         },
+      },
+    },
+  },
+  apis: [],
+};
+
+const swaggerSpec = swaggerJsdoc(options);
+
+module.exports = {
+  swaggerUi,
+  swaggerSpec,
+};
 
