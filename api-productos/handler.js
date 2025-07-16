@@ -1,13 +1,13 @@
 const AWS = require("aws-sdk");
 const axios = require("axios");
 const express = require("express");
+const cors = require("cors");
 const serverless = require("serverless-http");
 const { swaggerUi, swaggerSpec } = require("./utils/swagger");
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.TABLE_NAME;
 
-// Extrae tenant_id y usuario_id con validaciones condicionales
 function extraerDatos(event) {
   const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
   const { tenant_id, usuario_id } = body || {};
@@ -173,14 +173,9 @@ module.exports.actualizarProductos = async (event) => {
   return { statusCode: 200 };
 };
 
-// EXPRESS + SWAGGER
 const app = express();
+app.use(cors()); 
 app.use(express.json());
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
 
 app.get("/docs", (req, res) => {
   res.redirect("/docs/");
