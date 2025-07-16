@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const express = require("express");
+const cors = require("cors");
 const serverless = require("serverless-http");
 const { swaggerUi, getSwaggerSpec } = require("./utils/swagger");
 
@@ -14,7 +15,7 @@ const BUCKET_COMPRAS = process.env.BUCKET_COMPRAS;
 const buildResponse = (statusCode, body) => ({
   statusCode,
   headers: {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "*",  
     "Access-Control-Allow-Credentials": "true",
   },
   body: JSON.stringify(body),
@@ -38,7 +39,6 @@ module.exports.comprar = async (event) => {
     for (const producto of productos) {
       const { producto_id, cantidad } = producto;
 
-      // ✅ Buscar siempre productos creados por los admin
       const resultado = await dynamo
         .get({
           TableName: TABLA_PRODUCTOS,
@@ -66,7 +66,6 @@ module.exports.comprar = async (event) => {
         });
       }
 
-      // ✅ Actualizar stock en productos de tenant admin
       await dynamo
         .update({
           TableName: TABLA_PRODUCTOS,
@@ -135,22 +134,24 @@ module.exports.obtenerCompras = async (event) => {
   }
 };
 
-module.exports.swaggerDocs = async (event, context) => {
-  const app = express();
-  const { stage, domainName } = event.requestContext;
-  const baseUrl = `https://${domainName}/${stage}`;
+const app = express();
+app.use(cors()); 
+app.use(express.json());
+
+app.get("/docs", (req, res) => {
+  res.redirect("/docs/");
+});
+
+app.use("/docs", swaggerUi.serve, (req, res, next) => {
+  const host = req.headers["host"];
+  const stage = process.env.STAGE || "dev";
+  const baseUrl = `https://${host}/${stage}`;
   const swaggerSpec = getSwaggerSpec(baseUrl);
 
-  app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
-    next();
-  });
+  swaggerUi.setup(swaggerSpec)(req, res, next);
+});
 
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  const handler = serverless(app);
-  return handler(event, context);
-};
+module.exports.swaggerDocs = serverless(app);
 
 module.exports.actualizarCompras = async (event) => {
   try {
