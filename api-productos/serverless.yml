@@ -25,7 +25,18 @@ functions:
       - http:
           path: /productos
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - tenant_id
+              - usuario_id
+            allowCredentials: false
 
   listarProductos:
     handler: handler.listarProductos
@@ -33,7 +44,16 @@ functions:
       - http:
           path: /productos
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
 
   buscarProducto:
     handler: handler.buscarProducto
@@ -41,7 +61,16 @@ functions:
       - http:
           path: /productos/{codigo}
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
 
   modificarProducto:
     handler: handler.modificarProducto
@@ -49,7 +78,17 @@ functions:
       - http:
           path: /productos/{codigo}
           method: put
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - tenant_id
+            allowCredentials: false
 
   eliminarProducto:
     handler: handler.eliminarProducto
@@ -57,7 +96,17 @@ functions:
       - http:
           path: /productos/{codigo}
           method: delete
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - tenant_id
+            allowCredentials: false
 
   actualizarProductos:
     handler: handler.actualizarProductos
@@ -77,7 +126,16 @@ functions:
       - http:
           path: docs/{proxy+}
           method: any
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
 
 resources:
   Resources:
