@@ -15,8 +15,10 @@ const BUCKET_COMPRAS = process.env.BUCKET_COMPRAS;
 const buildResponse = (statusCode, body) => ({
   statusCode,
   headers: {
-    "Access-Control-Allow-Origin": "*",  
+    "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
   },
   body: JSON.stringify(body),
 });
@@ -134,8 +136,22 @@ module.exports.obtenerCompras = async (event) => {
   }
 };
 
+// OPTIONS para CORS preflight
+module.exports.opcionesCompras = async () => {
+  return {
+    statusCode: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+    },
+    body: "",
+  };
+};
+
 const app = express();
-app.use(cors()); 
+app.use(cors());
 app.use(express.json());
 
 app.get("/docs", (req, res) => {

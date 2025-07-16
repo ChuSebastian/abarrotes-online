@@ -28,7 +28,23 @@ functions:
       - http:
           path: compras
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Credentials
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Methods
+            allowCredentials: true
+            methods:
+              - OPTIONS
+              - POST
 
   obtenerCompras:
     handler: handler.obtenerCompras
@@ -36,7 +52,46 @@ functions:
       - http:
           path: compras
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Credentials
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Methods
+            allowCredentials: true
+            methods:
+              - OPTIONS
+              - GET
+
+  opcionesCompras:
+    handler: handler.opcionesCompras
+    events:
+      - http:
+          path: compras
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Credentials
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Methods
+            allowCredentials: true
+            methods:
+              - OPTIONS
 
   swaggerDocs:
     handler: handler.swaggerDocs
@@ -44,7 +99,23 @@ functions:
       - http:
           path: docs/{proxy+}
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            allowCredentials: true
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Credentials
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Methods
+            methods:
+              - OPTIONS
+              - GET
 
   actualizarCompras:
     handler: handler.actualizarCompras
@@ -56,7 +127,7 @@ functions:
           batchSize: 1
           startingPosition: LATEST
     environment:
-      BUCKET_COMPRAS: compras-por-tenant-${self:provider.stage}  # 🔧 Fijo aquí
+      BUCKET_COMPRAS: compras-por-tenant-${self:provider.stage}
 
 resources:
   Resources:
